@@ -122,8 +122,36 @@ app.get('/get-customers', (req, res) => {
     });
 });
 
+// ==========================================
+// USER LOGOUT PORTAL GATEWAY
+// ==========================================
 app.post('/logout', (req, res) => {
-    req.session.destroy(() => { res.clearCookie('connect.sid').json({ message: 'Logged out.' }); });
+    // Check if a session exists before trying to destroy it
+    if (req.session) {
+        req.session.destroy((err) => {
+            if (err) {
+                return res.status(500).json({ 
+                    success: false, 
+                    message: 'Error closing session registry.' 
+                });
+            }
+            
+            // Clear the browser cookie completely
+            res.clearCookie('connect.sid', {
+                path: '/',
+                httpOnly: true,
+                sameSite: 'lax',
+                secure: false // Set to true if using production HTTPS
+            });
+
+            return res.json({ 
+                success: true, 
+                message: 'Logged out successfully.' 
+            });
+        });
+    } else {
+        res.json({ success: true, message: 'No active session found.' });
+    }
 });
 
 // ==========================================
